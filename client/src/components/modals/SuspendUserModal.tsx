@@ -7,9 +7,10 @@ import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { User } from "@/types";
 
 interface SuspendUserModalProps {
-  user: any;
+  user: User | null;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -33,6 +34,7 @@ export default function SuspendUserModal({ user, isOpen, onClose }: SuspendUserM
 
   const suspendMutation = useMutation({
     mutationFn: async (data: SuspendUserForm) => {
+      if (!user) return;
       // send request to backend
       return api.suspendUser(user.id, {
         reason: data.reason,

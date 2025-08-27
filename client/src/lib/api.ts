@@ -1,173 +1,254 @@
 import { apiRequest } from "./queryClient";
+import {
+  DashboardStats,
+  Dispute,
+  Job,
+  ModeratedContent,
+  PaginatedResponse,
+  PlatformMetrics,
+  Review,
+  User,
+  UserRole,
+} from "@/types";
 
 export interface LoginResponse {
   access_token: string;
   refresh_token: string;
   token_type: string;
-  
-}
-
-export interface DashboardStats {
-  totalUsers: number;
-  activeJobs: number;
-  pendingDisputes: number;
-  monthlyRevenue: number;
-}
-
-export interface Metrics {
-  userGrowth: Array<{ month: string; users: number }>;
-  jobCompletion: {
-    completed: number;
-    inProgress: number;
-    cancelled: number;
-  };
-}
-
-export interface PaginatedResponse<T> {
-  data?: T[];
-  users?: T[];
-  jobs?: T[];
-  disputes?: T[];
-  submissions?: T[];
-  content?: T[];
-  payments?: T[];
-  total: number;
 }
 
 export const api = {
   // Auth
-  login: async (credentials: { identifier: string; password: string }): Promise<LoginResponse> => {
-    const response = await apiRequest("POST", "/api/v1/auth/login", credentials);
+  login: async (credentials: {
+    identifier: string;
+    password: string;
+  }): Promise<LoginResponse> => {
+    const response = await apiRequest("POST", "/auth/login", credentials);
     return response.json();
   },
 
-  getMe: async (): Promise<any> => {
-    const response = await apiRequest("GET", "/api/v1/users/me");
+  getMe: async (): Promise<User> => {
+    const response = await apiRequest("GET", "/users/me");
     return response.json();
   },
 
   refreshToken: async (refreshToken: string): Promise<LoginResponse> => {
-    const response = await apiRequest("POST", "/api/v1/auth/refresh", { refreshToken });
+    const response = await apiRequest("POST", "/auth/refresh", {
+      refreshToken,
+    });
     return response.json();
   },
 
   // Dashboard
   getDashboardStats: async (): Promise<DashboardStats> => {
-    const response = await apiRequest("GET", "/api/v1/admin/dashboard");
+    const response = await apiRequest("GET", "/admin/dashboard");
     return response.json();
   },
 
-  getMetrics: async (): Promise<Metrics> => {
-    const response = await apiRequest("GET", "/api/v1/admin/metrics");
+  getPlatformMetrics: async (
+    startDate: string,
+    endDate: string
+  ): Promise<PlatformMetrics> => {
+    const params = new URLSearchParams({
+      start_date: startDate,
+      end_date: endDate,
+    });
+    const response = await apiRequest("GET", `/admin/metrics?${params}`);
     return response.json();
   },
 
   // Users
-  getUsers: async (page = 1, limit = 10, filters: any = {}): Promise<PaginatedResponse<any>> => {
+  getUsers: async (
+    page = 1,
+    limit = 10,
+    filters: {
+      role?: UserRole;
+      is_verified?: boolean;
+      is_active?: boolean;
+      search?: string;
+    } = {}
+  ): Promise<PaginatedResponse<User>> => {
     const params = new URLSearchParams({
-      page: page.toString(),
+      skip: ((page - 1) * limit).toString(),
       limit: limit.toString(),
-      ...(filters.role && { role: filters.role }),
-      ...(filters.status && { status: filters.status }),
     });
-    const response = await apiRequest("GET", `/api/v1/admin/users?${params}`);
+    if (filters.role) params.append("role", filters.role);
+    if (filters.is_verified !== undefined)
+      params.append("is_verified", String(filters.is_verified));
+    if (filters.is_active !== undefined)
+      params.append("is_active", String(filters.is_active));
+    if (filters.search) params.append("search", filters.search);
+
+    const response = await apiRequest("GET", `/admin/users?${params}`);
     return response.json();
   },
 
-  getUser: async (userId: string): Promise<any> => {
-    const response = await apiRequest("GET", `/api/v1/users/${userId}`);
-    return response.json();
-  },
-
-  verifyUser: async (userId: string): Promise<any> => {
-    const response = await apiRequest("PUT", `/api/v1/users/${userId}/verify`);
-    return response.json();
-  },
-
-  deactivateUser: async (userId: string): Promise<any> => {
-    const response = await apiRequest("PUT", `/api/v1/users/${userId}/deactivate`);
-    return response.json();
-  },
-
-  suspendUser: async (userId: string, data: { duration_days: number; reason: string }): Promise<any> => {
-    const response = await apiRequest("POST", `/api/v1/admin/users/${userId}/suspend`, data);
+  suspendUser: async (
+    userId: number,
+    data: { duration_days: number; reason: string }
+  ): Promise<{ status: string }> => {
+    const response = await apiRequest(
+      "POST",
+      `/admin/users/${userId}/suspend`,
+      data
+    );
     return response.json();
   },
 
   // Jobs
-  getJobs: async (page = 1, limit = 10, filters: any = {}): Promise<PaginatedResponse<any>> => {
+  getJobs: async (
+    page = 1,
+    limit = 10,
+    filters: { status?: string; has_dispute?: boolean; search?: string } = {}
+  ): Promise<PaginatedResponse<Job>> => {
     const params = new URLSearchParams({
-      page: page.toString(),
+      skip: ((page - 1) * limit).toString(),
       limit: limit.toString(),
-      ...(filters.status && { status: filters.status }),
-      ...(filters.hasDispute !== undefined && { hasDispute: filters.hasDispute.toString() }),
     });
-    const response = await apiRequest("GET", `/api/v1/admin/jobs?${params}`);
-    return response.json();
-  },
+    if (filters.status) params.append("status", filters.status);
+    if (filters.has_dispute !== undefined)
+      params.append("has_dispute", String(filters.has_dispute));
+    if (filters.search) params.append("search", filters.search);
 
-  getJob: async (jobId: string): Promise<any> => {
-    const response = await apiRequest("GET", `/api/v1/jobs/${jobId}`);
+    const response = await apiRequest("GET", `/admin/jobs?${params}`);
     return response.json();
   },
 
   // Disputes
-  getDisputes: async (page = 1, limit = 10): Promise<PaginatedResponse<any>> => {
+  getDisputes: async (
+    page = 1,
+    limit = 10,
+    filters: { status?: string } = {}
+  ): Promise<PaginatedResponse<Dispute>> => {
     const params = new URLSearchParams({
-      page: page.toString(),
+      skip: ((page - 1) * limit).toString(),
       limit: limit.toString(),
     });
-    const response = await apiRequest("GET", `/api/v1/admin/disputes?${params}`);
+    if (filters.status) params.append("status", filters.status);
+    const response = await apiRequest("GET", `/admin/disputes?${params}`);
     return response.json();
   },
 
-  resolveDispute: async (disputeId: string, resolution: string): Promise<any> => {
-    const response = await apiRequest("POST", `/api/v1/admin/disputes/${disputeId}/resolve`, { resolution });
+  resolveDispute: async (
+    disputeId: number,
+    resolution: string
+  ): Promise<{ status: string }> => {
+    const response = await apiRequest(
+      "POST",
+      `/admin/disputes/${disputeId}/resolve`,
+      { resolution }
+    );
     return response.json();
   },
 
   // KYC
-  getPendingKYC: async (page = 1, limit = 10): Promise<PaginatedResponse<any>> => {
+  getPendingKYC: async (
+    page = 1,
+    limit = 10
+  ): Promise<PaginatedResponse<User>> => {
     const params = new URLSearchParams({
-      page: page.toString(),
+      skip: ((page - 1) * limit).toString(),
       limit: limit.toString(),
     });
-    const response = await apiRequest("GET", `/api/v1/admin/kyc/pending?${params}`);
+    const response = await apiRequest("GET", `/admin/kyc/pending?${params}`);
     return response.json();
   },
 
-  verifyKYC: async (submissionId: string, status: "approved" | "rejected", notes?: string): Promise<any> => {
-    const response = await apiRequest("POST", `/api/v1/kyc/${submissionId}/verify`, { status, notes });
+  verifyKYC: async (
+    userId: number,
+    status: "approved" | "rejected",
+    notes?: string
+  ): Promise<any> => {
+    const response = await apiRequest(
+      "POST",
+      `/admin/kyc/${userId}/verify`,
+      { status, notes }
+    );
     return response.json();
   },
 
   // Content Moderation
-  getFlaggedContent: async (page = 1, limit = 10): Promise<PaginatedResponse<any>> => {
+  getFlaggedContent: async (
+    page = 1,
+    limit = 10,
+    filters: { content_type?: string; status?: string } = {}
+  ): Promise<PaginatedResponse<ModeratedContent>> => {
     const params = new URLSearchParams({
-      page: page.toString(),
+      skip: ((page - 1) * limit).toString(),
       limit: limit.toString(),
     });
-    const response = await apiRequest("GET", `/api/v1/admin/content-moderation?${params}`);
+    if (filters.content_type)
+      params.append("content_type", filters.content_type);
+    if (filters.status) params.append("status", filters.status);
+
+    const response = await apiRequest(
+      "GET",
+      `/admin/content-moderation?${params}`
+    );
     return response.json();
   },
 
-  moderateContent: async (contentId: string, action: "approved" | "removed"): Promise<any> => {
-    const response = await apiRequest("POST", `/api/v1/admin/content-moderation/${contentId}/moderate`, { action });
+  moderateContent: async (
+    contentId: number,
+    action: string,
+    reason: string
+  ): Promise<{ status: string }> => {
+    const response = await apiRequest(
+      "POST",
+      `/admin/content-moderation/${contentId}/moderate`,
+      { action, reason }
+    );
     return response.json();
   },
 
-  // Payments
-  getPaymentHistory: async (page = 1, limit = 10): Promise<PaginatedResponse<any>> => {
+  // Other Admin Endpoints
+  getStatsOverview: async (): Promise<any> => {
+    const response = await apiRequest("GET", "/admin/stats/overview");
+    return response.json();
+  },
+
+  getActiveDisputes: async (): Promise<any[]> => {
+    const response = await apiRequest("GET", "/admin/disputes/active");
+    return response.json();
+  },
+
+  getPaymentReports: async (): Promise<any[]> => {
+    const response = await apiRequest("GET", "/admin/reports/payments");
+    return response.json();
+  },
+
+  getPendingModeration: async (): Promise<any[]> => {
+    const response = await apiRequest("GET", "/admin/moderation/pending");
+    return response.json();
+  },
+
+  // Reviews
+  getReviews: async (
+    page = 1,
+    limit = 10,
+    filters: {
+      user_id?: number;
+      job_id?: number;
+      search?: string;
+    } = {}
+  ): Promise<PaginatedResponse<Review>> => {
     const params = new URLSearchParams({
-      page: page.toString(),
+      skip: ((page - 1) * limit).toString(),
       limit: limit.toString(),
     });
-    const response = await apiRequest("GET", `/api/v1/payments/history?${params}`);
+    if (filters.user_id) params.append("user_id", String(filters.user_id));
+    if (filters.job_id) params.append("job_id", String(filters.job_id));
+    if (filters.search) params.append("search", filters.search);
+
+    const response = await apiRequest("GET", `/admin/reviews?${params}`);
     return response.json();
   },
 
-  getPaymentReports: async (): Promise<PaginatedResponse<any>> => {
-    const response = await apiRequest("GET", "/api/v1/admin/reports/payments");
+  deleteReview: async (reviewId: number): Promise<{ status: string }> => {
+    const response = await apiRequest(
+      "DELETE",
+      `/admin/reviews/${reviewId}`
+    );
     return response.json();
   },
 };

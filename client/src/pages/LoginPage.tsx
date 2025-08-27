@@ -32,7 +32,7 @@ export default function LoginPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
-      navigate('/dashboard');
+      navigate('/');
     }
   }, [isAuthenticated, isLoading, navigate]);
 

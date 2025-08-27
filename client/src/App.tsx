@@ -14,6 +14,8 @@ import DisputesPage from "@/pages/DisputesPage";
 import KYCPage from "@/pages/KYCPage";
 import ContentModerationPage from "@/pages/ContentModerationPage";
 import PaymentsPage from "@/pages/PaymentsPage";
+import MetricsPage from "@/pages/MetricsPage";
+import ReviewsPage from "@/pages/ReviewsPage";
 import AdminLayout from "@/components/Layout/AdminLayout";
 import NotFound from "@/pages/not-found";
 
@@ -49,6 +51,8 @@ function Router() {
       <Route path="/kyc" component={() => <ProtectedRoute component={KYCPage} />} />
       <Route path="/content" component={() => <ProtectedRoute component={ContentModerationPage} />} />
       <Route path="/payments" component={() => <ProtectedRoute component={PaymentsPage} />} />
+      <Route path="/metrics" component={() => <ProtectedRoute component={MetricsPage} />} />
+      <Route path="/reviews" component={() => <ProtectedRoute component={ReviewsPage} />} />
       <Route component={NotFound} />
     </Switch>
   );

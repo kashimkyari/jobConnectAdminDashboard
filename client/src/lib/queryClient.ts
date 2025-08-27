@@ -69,7 +69,7 @@ export async function apiRequest(
     ...(data ? { "Content-Type": "application/json" } : {}),
   };
 
-  const res = await fetch(url, {
+  const res = await fetch(`/api/v1${url}`, {
     method,
     headers,
     body: data ? JSON.stringify(data) : undefined,
@@ -80,7 +80,7 @@ export async function apiRequest(
     try {
       token = await refreshToken();
       headers["Authorization"] = `Bearer ${token}`;
-      const retryRes = await fetch(url, {
+      const retryRes = await fetch(`/api/v1${url}`, {
         method,
         headers,
         body: data ? JSON.stringify(data) : undefined,
