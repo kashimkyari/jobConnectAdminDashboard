@@ -31,6 +31,7 @@ const navigationItems = [
   { href: "/payments", icon: CreditCard, label: "Payments" },
   { href: "/metrics", icon: TrendingUp, label: "Metrics" },
   { href: "/reviews", icon: MessageSquare, label: "Reviews" },
+  { href: "/badges", icon: Shield, label: "Badges" },
 ];
 
 interface NavItemProps {

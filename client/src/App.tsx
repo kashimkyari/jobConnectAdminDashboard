@@ -16,6 +16,7 @@ import ContentModerationPage from "@/pages/ContentModerationPage";
 import PaymentsPage from "@/pages/PaymentsPage";
 import MetricsPage from "@/pages/MetricsPage";
 import ReviewsPage from "@/pages/ReviewsPage";
+import BadgesPage from "@/pages/BadgesPage";
 import AdminLayout from "@/components/Layout/AdminLayout";
 import NotFound from "@/pages/not-found";
 
@@ -53,6 +54,7 @@ function Router() {
       <Route path="/payments" component={() => <ProtectedRoute component={PaymentsPage} />} />
       <Route path="/metrics" component={() => <ProtectedRoute component={MetricsPage} />} />
       <Route path="/reviews" component={() => <ProtectedRoute component={ReviewsPage} />} />
+      <Route path="/badges" component={() => <ProtectedRoute component={BadgesPage} />} />
       <Route component={NotFound} />
     </Switch>
   );

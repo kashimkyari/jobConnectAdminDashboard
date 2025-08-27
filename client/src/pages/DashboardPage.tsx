@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTheme } from "@/contexts/ThemeContext";
 import { api } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -38,6 +39,7 @@ ChartJS.register(
 );
 
 export default function DashboardPage() {
+  const { theme } = useTheme();
   const [dateRange, setDateRange] = useState({
     start: new Date(new Date().setDate(new Date().getDate() - 30))
       .toLocaleDateString("en-GB")
@@ -130,41 +132,42 @@ export default function DashboardPage() {
     plugins: {
       legend: {
         display: false,
+        labels: {
+          color: theme === "dark" ? "#fff" : "#000",
+        },
       },
     },
     scales: {
       y: {
         beginAtZero: true,
+        ticks: {
+          color: theme === "dark" ? "#fff" : "#000",
+        },
+        grid: {
+          color: theme === "dark" ? "#444" : "#ddd",
+        },
+      },
+      x: {
+        ticks: {
+          color: theme === "dark" ? "#fff" : "#000",
+        },
+        grid: {
+          color: theme === "dark" ? "#444" : "#ddd",
+        },
       },
     },
   };
 
   const userGrowthData = {
-    labels: metrics?.user_growth?.map((item) =>
-      new Date(item.timestamp).toLocaleDateString()
+    labels: metrics?.user_growth?.daily_growth?.map((item) =>
+      new Date(item.date).toLocaleDateString()
     ),
     datasets: [
       {
         label: "New Users",
-        data: metrics?.user_growth?.map((item) => item.value),
+        data: metrics?.user_growth?.daily_growth?.map((item) => item.count),
         borderColor: "hsl(var(--primary))",
         backgroundColor: "hsla(var(--primary), 0.1)",
-        fill: true,
-        tension: 0.4,
-      },
-    ],
-  };
-
-  const jobCompletionsData = {
-    labels: metrics?.job_completions?.map((item) =>
-      new Date(item.timestamp).toLocaleDateString()
-    ),
-    datasets: [
-      {
-        label: "Jobs Completed",
-        data: metrics?.job_completions?.map((item) => item.value),
-        borderColor: "hsl(var(--chart-2))",
-        backgroundColor: "hsla(var(--chart-2), 0.1)",
         fill: true,
         tension: 0.4,
       },
@@ -232,18 +235,39 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-
-        <Card className="shadow-sm">
+        <Card>
           <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4">
-              Job Completions
+            <h3 className="text-lg font-semibold mb-4">Job Completion Rate</h3>
+            <div className="h-64 flex items-center justify-center">
+              <p className="text-4xl font-bold">
+                {metrics?.jobs?.completion_rate !== undefined
+                  ? `${(metrics.jobs.completion_rate * 100).toFixed(2)}%`
+                  : "N/A"}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold mb-4">
+              Total Payment Volume
             </h3>
-            <div className="h-64">
-              {metricsLoading ? (
-                <Skeleton className="h-full w-full" />
-              ) : (
-                <Line data={jobCompletionsData} options={chartOptions} />
-              )}
+            <div className="h-64 flex items-center justify-center">
+              <p className="text-4xl font-bold">
+                {metrics?.payments?.total_volume !== undefined
+                  ? `$${metrics.payments.total_volume.toFixed(2)}`
+                  : "N/A"}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold mb-4">Total Transactions</h3>
+            <div className="h-64 flex items-center justify-center">
+              <p className="text-4xl font-bold">
+                {metrics?.payments?.transaction_count ?? "N/A"}
+              </p>
             </div>
           </CardContent>
         </Card>

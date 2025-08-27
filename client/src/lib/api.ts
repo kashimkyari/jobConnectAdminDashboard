@@ -9,6 +9,8 @@ import {
   Review,
   User,
   UserRole,
+  Badge,
+  UserBadge,
 } from "@/types";
 
 export interface LoginResponse {
@@ -248,6 +250,37 @@ export const api = {
     const response = await apiRequest(
       "DELETE",
       `/admin/reviews/${reviewId}`
+    );
+    return response.json();
+  },
+
+  // Badges
+  getBadges: async (
+    page = 1,
+    limit = 10
+  ): Promise<PaginatedResponse<Badge>> => {
+    const params = new URLSearchParams({
+      skip: ((page - 1) * limit).toString(),
+      limit: limit.toString(),
+    });
+    const response = await apiRequest("GET", `/admin/badges?${params}`);
+    return response.json();
+  },
+
+  createBadge: async (
+    badgeData: Omit<Badge, "id" | "created_at" | "updated_at">
+  ): Promise<Badge> => {
+    const response = await apiRequest("POST", "/admin/badges", badgeData);
+    return response.json();
+  },
+
+  awardBadge: async (
+    badgeId: number,
+    userId: number
+  ): Promise<UserBadge> => {
+    const response = await apiRequest(
+      "POST",
+      `/admin/badges/${badgeId}/award/${userId}`
     );
     return response.json();
   },

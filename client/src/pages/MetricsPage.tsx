@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTheme } from "@/contexts/ThemeContext";
 import { api } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Line } from "react-chartjs-2";
@@ -26,6 +27,7 @@ ChartJS.register(
 );
 
 export default function MetricsPage() {
+  const { theme } = useTheme();
   const [dateRange, setDateRange] = useState({
     start: new Date(new Date().setDate(new Date().getDate() - 30))
       .toLocaleDateString("en-GB")
@@ -52,21 +54,45 @@ export default function MetricsPage() {
     plugins: {
       legend: {
         display: true,
+        labels: {
+          color: theme === "dark" ? "#fff" : "#000",
+        },
       },
     },
     scales: {
       y: {
         beginAtZero: true,
+        ticks: {
+          color: theme === "dark" ? "#fff" : "#000",
+        },
+        grid: {
+          color: theme === "dark" ? "#444" : "#ddd",
+        },
+      },
+      x: {
+        ticks: {
+          color: theme === "dark" ? "#fff" : "#000",
+        },
+        grid: {
+          color: theme === "dark" ? "#444" : "#ddd",
+        },
       },
     },
   };
 
-  const chartData = (label: string, data: any[] | undefined) => ({
-    labels: data?.map((item) => new Date(item.timestamp).toLocaleDateString()),
+  const chartData = (
+    label: string,
+    data: any[] | undefined,
+    labelKey: string,
+    valueKey: string
+  ) => ({
+    labels: data?.map((item) =>
+      new Date(item[labelKey]).toLocaleDateString()
+    ),
     datasets: [
       {
         label,
-        data: data?.map((item) => item.value),
+        data: data?.map((item) => item[valueKey]),
         borderColor: "hsl(var(--primary))",
         backgroundColor: "hsla(var(--primary), 0.1)",
         fill: true,
@@ -97,7 +123,12 @@ export default function MetricsPage() {
           <h3 className="text-lg font-semibold mb-4">User Growth</h3>
           <div className="h-64">
             <Line
-              data={chartData("New Users", metrics?.user_growth || [])}
+              data={chartData(
+                "New Users",
+                metrics?.user_growth?.daily_growth,
+                "date",
+                "count"
+              )}
               options={chartOptions}
             />
           </div>
@@ -105,56 +136,55 @@ export default function MetricsPage() {
       </Card>
       <Card>
         <CardContent className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Job Postings</h3>
-          <div className="h-64">
-            <Line
-              data={chartData("Job Postings", metrics?.job_postings || [])}
-              options={chartOptions}
-            />
+          <h3 className="text-lg font-semibold mb-4">Job Completion Rate</h3>
+          <div className="h-64 flex items-center justify-center">
+            <p className="text-4xl font-bold">
+              {metrics?.jobs?.completion_rate !== undefined
+                ? `${(metrics.jobs.completion_rate * 100).toFixed(2)}%`
+                : "N/A"}
+            </p>
           </div>
         </CardContent>
       </Card>
       <Card>
         <CardContent className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Job Completions</h3>
-          <div className="h-64">
-            <Line
-              data={chartData("Job Completions", metrics?.job_completions || [])}
-              options={chartOptions}
-            />
+          <h3 className="text-lg font-semibold mb-4">Total Payment Volume</h3>
+          <div className="h-64 flex items-center justify-center">
+            <p className="text-4xl font-bold">
+              {metrics?.payments?.total_volume !== undefined
+                ? `$${metrics.payments.total_volume.toFixed(2)}`
+                : "N/A"}
+            </p>
           </div>
         </CardContent>
       </Card>
       <Card>
         <CardContent className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Payment Volume</h3>
-          <div className="h-64">
-            <Line
-              data={chartData("Payment Volume", metrics?.payment_volume || [])}
-              options={chartOptions}
-            />
+          <h3 className="text-lg font-semibold mb-4">Total Transactions</h3>
+          <div className="h-64 flex items-center justify-center">
+            <p className="text-4xl font-bold">
+              {metrics?.payments?.transaction_count ?? "N/A"}
+            </p>
           </div>
         </CardContent>
       </Card>
       <Card>
         <CardContent className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Active Users</h3>
-          <div className="h-64">
-            <Line
-              data={chartData("Active Users", metrics?.active_users || [])}
-              options={chartOptions}
-            />
+          <h3 className="text-lg font-semibold mb-4">Total Messages</h3>
+          <div className="h-64 flex items-center justify-center">
+            <p className="text-4xl font-bold">
+              {metrics?.engagement?.message_count ?? "N/A"}
+            </p>
           </div>
         </CardContent>
       </Card>
       <Card>
         <CardContent className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Disputes</h3>
-          <div className="h-64">
-            <Line
-              data={chartData("Disputes", metrics?.disputes || [])}
-              options={chartOptions}
-            />
+          <h3 className="text-lg font-semibold mb-4">Total Reviews</h3>
+          <div className="h-64 flex items-center justify-center">
+            <p className="text-4xl font-bold">
+              {metrics?.engagement?.review_count ?? "N/A"}
+            </p>
           </div>
         </CardContent>
       </Card>

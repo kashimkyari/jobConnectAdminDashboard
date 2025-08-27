@@ -9,6 +9,7 @@ export interface AuthUser {
   role: string;
   fullname?: string;
   lastName?: string;
+  avatarUrl?: string;
 }
 
 export const authStorage = {

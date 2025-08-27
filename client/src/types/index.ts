@@ -93,6 +93,7 @@ export interface PaginatedResponse<T> {
   disputes?: T[];
   content?: T[];
   items?: T[];
+  badges?: T[];
 }
 
 export interface DashboardStats {
@@ -110,18 +111,34 @@ export interface DashboardStats {
   job_completion_rate: number;
 }
 
-export interface TimeSeriesMetric {
-  timestamp: string;
-  value: number;
+export interface DailyGrowth {
+  date: string;
+  count: number;
+}
+
+export interface UserGrowth {
+  daily_growth: DailyGrowth[];
+}
+
+export interface JobsMetrics {
+  completion_rate: number;
+}
+
+export interface PaymentsMetrics {
+  total_volume: number;
+  transaction_count: number;
+}
+
+export interface EngagementMetrics {
+  message_count: number;
+  review_count: number;
 }
 
 export interface PlatformMetrics {
-  user_growth: TimeSeriesMetric[];
-  job_postings: TimeSeriesMetric[];
-  job_completions: TimeSeriesMetric[];
-  payment_volume: TimeSeriesMetric[];
-  active_users: TimeSeriesMetric[];
-  disputes: TimeSeriesMetric[];
+  user_growth: UserGrowth;
+  jobs: JobsMetrics;
+  payments: PaymentsMetrics;
+  engagement: EngagementMetrics;
 }
 
 export interface Review {
@@ -144,4 +161,21 @@ export interface ReviewStats {
   average_rating: number;
   total_reviews: number;
   rating_distribution: Record<string, number>;
+}
+
+export interface Badge {
+  id: number;
+  name: string;
+  description: string;
+  image_url?: string;
+  criteria: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserBadge {
+  id: number;
+  user_id: number;
+  badge_id: number;
+  awarded_at: string;
 }
