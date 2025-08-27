@@ -23,8 +23,8 @@ export default function BadgesPage() {
   });
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
+    <div className="flex flex-col h-full">
+      <div className="flex justify-between items-center p-4">
         <h1 className="text-2xl font-bold">Badges</h1>
         <Dialog>
           <DialogTrigger asChild>
@@ -38,15 +38,17 @@ export default function BadgesPage() {
           </DialogContent>
         </Dialog>
       </div>
-      <DataTable
-        columns={columns}
-        data={data?.badges || []}
-        isLoading={isLoading}
-        page={page}
-        limit={limit}
-        total={data?.total || 0}
-        onPageChange={setPage}
-      />
+      <div className="flex-grow overflow-auto">
+        <DataTable
+          columns={columns}
+          data={data?.badges || []}
+          isLoading={isLoading}
+          page={page}
+          limit={limit}
+          total={data?.total || 0}
+          onPageChange={setPage}
+        />
+      </div>
     </div>
   );
 }

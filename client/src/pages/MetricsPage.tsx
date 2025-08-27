@@ -93,8 +93,8 @@ export default function MetricsPage() {
       {
         label,
         data: data?.map((item) => item[valueKey]),
-        borderColor: "hsl(var(--primary))",
-        backgroundColor: "hsla(var(--primary), 0.1)",
+        borderColor: "#4FD1C5",
+        backgroundColor: "rgba(79, 209, 197, 0.2)",
         fill: true,
         tension: 0.4,
       },
@@ -117,10 +117,11 @@ export default function MetricsPage() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <Card>
-        <CardContent className="p-6">
-          <h3 className="text-lg font-semibold mb-4">User Growth</h3>
+    <div className="overflow-auto h-full">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold mb-4">User Growth</h3>
           <div className="h-64">
             <Line
               data={chartData(
@@ -188,6 +189,7 @@ export default function MetricsPage() {
           </div>
         </CardContent>
       </Card>
+    </div>
     </div>
   );
 }

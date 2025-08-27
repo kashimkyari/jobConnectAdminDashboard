@@ -86,7 +86,7 @@ export default function PaymentsPage() {
     reports?.filter((p) => p.status === "pending").length || 0;
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col h-full space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardContent className="p-6">
@@ -114,7 +114,7 @@ export default function PaymentsPage() {
         </Card>
       </div>
 
-      <Card>
+      <Card className="flex flex-col flex-grow">
         <div className="px-6 py-4 border-b flex justify-between items-center">
           <h3 className="text-lg font-semibold">Payment Reports</h3>
           <Button variant="outline" size="sm">

@@ -160,8 +160,8 @@ export default function UsersPage() {
   }
 
   return (
-    <>
-      <Card className="shadow-sm">
+    <div className="flex flex-col h-full">
+      <Card className="shadow-sm flex flex-col flex-grow">
         <div className="px-6 py-4 border-b">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-foreground">
@@ -291,7 +291,7 @@ export default function UsersPage() {
           </Table>
         </div>
 
-        <div className="bg-background px-4 py-3 flex items-center justify-between border-t sm:px-6">
+        <div className="bg-background px-4 py-3 flex items-center justify-between border-t sm:px-6 mt-auto">
           <div>
             <p className="text-sm text-foreground">
               Showing{" "}
@@ -343,6 +343,6 @@ export default function UsersPage() {
           />
         </>
       )}
-    </>
+    </div>
   );
 }

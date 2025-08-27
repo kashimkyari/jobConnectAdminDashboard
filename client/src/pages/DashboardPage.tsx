@@ -12,6 +12,10 @@ import {
   UserCheck,
   FileText,
   Activity,
+  Repeat,
+  UserPlus,
+  Briefcase as BriefcaseIcon,
+  CheckCircle,
 } from "lucide-react";
 import { Line } from "react-chartjs-2";
 import {
@@ -22,6 +26,7 @@ import {
   LineElement,
   Title,
   Tooltip,
+  BarElement,
   Legend,
   ArcElement,
 } from "chart.js";
@@ -34,6 +39,7 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
+  BarElement,
   Legend,
   ArcElement
 );
@@ -56,6 +62,11 @@ export default function DashboardPage() {
   const { data: metrics, isLoading: metricsLoading } = useQuery({
     queryKey: ["platformMetrics", dateRange],
     queryFn: () => api.getPlatformMetrics(dateRange.start, dateRange.end),
+  });
+
+  const { data: recentActivity, isLoading: activityLoading } = useQuery({
+    queryKey: ["recentActivity"],
+    queryFn: () => api.getRecentActivity(),
   });
 
   useEffect(() => {
@@ -124,6 +135,19 @@ export default function DashboardPage() {
       icon: Activity,
       color: "bg-teal-100 text-teal-600 dark:bg-teal-900/50 dark:text-teal-400",
     },
+    {
+      title: "Total Payment Volume",
+      value: formatCurrency(metrics?.payments?.total_volume || 0),
+      icon: DollarSign,
+      color:
+        "bg-green-100 text-green-600 dark:bg-green-900/50 dark:text-green-400",
+    },
+    {
+      title: "Total Transactions",
+      value: metrics?.payments?.transaction_count || 0,
+      icon: Repeat,
+      color: "bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400",
+    },
   ];
 
   const chartOptions = {
@@ -166,12 +190,25 @@ export default function DashboardPage() {
       {
         label: "New Users",
         data: metrics?.user_growth?.daily_growth?.map((item) => item.count),
-        borderColor: "hsl(var(--primary))",
-        backgroundColor: "hsla(var(--primary), 0.1)",
+        borderColor: "#4FD1C5",
+        backgroundColor: "rgba(79, 209, 197, 0.2)",
         fill: true,
         tension: 0.4,
       },
     ],
+  };
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case "user_registered":
+        return <UserPlus className="h-5 w-5 text-blue-500" />;
+      case "job_created":
+        return <BriefcaseIcon className="h-5 w-5 text-green-500" />;
+      case "job_completed":
+        return <CheckCircle className="h-5 w-5 text-purple-500" />;
+      default:
+        return <Activity className="h-5 w-5 text-gray-500" />;
+    }
   };
 
   if (statsLoading) {
@@ -192,26 +229,26 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {statsCards.map((stat) => {
           const Icon = stat.icon;
           return (
             <Card key={stat.title} className="shadow-sm">
-              <CardContent className="p-6">
+              <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                       {stat.title}
                     </p>
-                    <p className="text-3xl font-bold text-foreground mt-2">
+                    <p className="text-2xl font-bold text-foreground mt-1">
                       {stat.value}
                     </p>
                   </div>
                   <div
-                    className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center`}
+                    className={`w-10 h-10 ${stat.color} rounded-lg flex items-center justify-center`}
                   >
-                    <Icon className="h-6 w-6" />
+                    <Icon className="h-5 w-5" />
                   </div>
                 </div>
               </CardContent>
@@ -220,13 +257,13 @@ export default function DashboardPage() {
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card className="shadow-sm">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4">
+          <CardContent className="p-4">
+            <h3 className="text-base font-semibold text-foreground mb-2">
               User Growth
             </h3>
-            <div className="h-64">
+            <div className="h-56">
               {metricsLoading ? (
                 <Skeleton className="h-full w-full" />
               ) : (
@@ -236,38 +273,38 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Job Completion Rate</h3>
-            <div className="h-64 flex items-center justify-center">
-              <p className="text-4xl font-bold">
-                {metrics?.jobs?.completion_rate !== undefined
-                  ? `${(metrics.jobs.completion_rate * 100).toFixed(2)}%`
-                  : "N/A"}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold mb-4">
-              Total Payment Volume
-            </h3>
-            <div className="h-64 flex items-center justify-center">
-              <p className="text-4xl font-bold">
-                {metrics?.payments?.total_volume !== undefined
-                  ? `$${metrics.payments.total_volume.toFixed(2)}`
-                  : "N/A"}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Total Transactions</h3>
-            <div className="h-64 flex items-center justify-center">
-              <p className="text-4xl font-bold">
-                {metrics?.payments?.transaction_count ?? "N/A"}
-              </p>
+          <CardContent className="p-4">
+            <h3 className="text-base font-semibold mb-2">Recent Activity</h3>
+            <div className="h-56 overflow-y-auto">
+              {activityLoading ? (
+                <div className="space-y-4">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="flex items-center space-x-4">
+                      <Skeleton className="h-8 w-8 rounded-full" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-48" />
+                        <Skeleton className="h-3 w-24" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <ul className="space-y-4">
+                  {recentActivity?.map((activity) => (
+                    <li key={activity.id} className="flex items-start space-x-4">
+                      <div className="flex-shrink-0">
+                        {getActivityIcon(activity.type)}
+                      </div>
+                      <div>
+                        <p className="text-sm">{activity.message}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(activity.timestamp).toLocaleString()}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </CardContent>
         </Card>

@@ -11,6 +11,7 @@ import {
   UserRole,
   Badge,
   UserBadge,
+  RecentActivity,
 } from "@/types";
 
 export interface LoginResponse {
@@ -283,5 +284,41 @@ export const api = {
       `/admin/badges/${badgeId}/award/${userId}`
     );
     return response.json();
+  },
+
+  getRecentActivity: async (): Promise<RecentActivity[]> => {
+    // Mocked data since the endpoint doesn't exist yet
+    return Promise.resolve([
+      {
+        id: 1,
+        type: "user_registered",
+        message: "John Doe just registered.",
+        timestamp: new Date().toISOString(),
+      },
+      {
+        id: 2,
+        type: "job_created",
+        message: "Jane Smith created a new job: 'Frontend Developer'",
+        timestamp: new Date(
+          new Date().getTime() - 5 * 60 * 1000
+        ).toISOString(),
+      },
+      {
+        id: 3,
+        type: "job_completed",
+        message: "Job 'Backend Developer' has been completed.",
+        timestamp: new Date(
+          new Date().getTime() - 15 * 60 * 1000
+        ).toISOString(),
+      },
+      {
+        id: 4,
+        type: "user_registered",
+        message: "Alice Johnson just registered.",
+        timestamp: new Date(
+          new Date().getTime() - 30 * 60 * 1000
+        ).toISOString(),
+      },
+    ]);
   },
 };

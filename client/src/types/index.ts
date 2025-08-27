@@ -179,3 +179,10 @@ export interface UserBadge {
   badge_id: number;
   awarded_at: string;
 }
+
+export interface RecentActivity {
+  id: number;
+  type: "user_registered" | "job_created" | "job_completed";
+  message: string;
+  timestamp: string;
+}
