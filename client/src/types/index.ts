@@ -186,3 +186,11 @@ export interface RecentActivity {
   message: string;
   timestamp: string;
 }
+
+export interface Notification {
+  id: number;
+  message: string;
+  read: boolean;
+  created_at: string;
+  user_id: number;
+}

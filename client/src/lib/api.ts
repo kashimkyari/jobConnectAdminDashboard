@@ -12,6 +12,7 @@ import {
   Badge,
   UserBadge,
   RecentActivity,
+  Notification,
 } from "@/types";
 
 export interface LoginResponse {
@@ -93,7 +94,7 @@ export const api = {
     const response = await apiRequest(
       "POST",
       `/admin/users/${userId}/suspend`,
-      data
+      { duration_days: data.duration_days, reason: data.reason }
     );
     return response.json();
   },
@@ -286,39 +287,14 @@ export const api = {
     return response.json();
   },
 
-  getRecentActivity: async (): Promise<RecentActivity[]> => {
-    // Mocked data since the endpoint doesn't exist yet
-    return Promise.resolve([
-      {
-        id: 1,
-        type: "user_registered",
-        message: "John Doe just registered.",
-        timestamp: new Date().toISOString(),
-      },
-      {
-        id: 2,
-        type: "job_created",
-        message: "Jane Smith created a new job: 'Frontend Developer'",
-        timestamp: new Date(
-          new Date().getTime() - 5 * 60 * 1000
-        ).toISOString(),
-      },
-      {
-        id: 3,
-        type: "job_completed",
-        message: "Job 'Backend Developer' has been completed.",
-        timestamp: new Date(
-          new Date().getTime() - 15 * 60 * 1000
-        ).toISOString(),
-      },
-      {
-        id: 4,
-        type: "user_registered",
-        message: "Alice Johnson just registered.",
-        timestamp: new Date(
-          new Date().getTime() - 30 * 60 * 1000
-        ).toISOString(),
-      },
-    ]);
+  // Notifications
+  getNotifications: async (userId: number): Promise<Notification[]> => {
+    const response = await apiRequest("GET", `/notifications/${userId}`);
+    return response.json();
+  },
+
+  markNotificationAsRead: async (notificationId: number): Promise<Notification> => {
+    const response = await apiRequest("PUT", `/notifications/${notificationId}/read`);
+    return response.json();
   },
 };

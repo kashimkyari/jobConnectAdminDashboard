@@ -1,7 +1,10 @@
+
+
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTheme } from "@/contexts/ThemeContext";
 import { api } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Users,
@@ -13,9 +16,6 @@ import {
   FileText,
   Activity,
   Repeat,
-  UserPlus,
-  Briefcase as BriefcaseIcon,
-  CheckCircle,
 } from "lucide-react";
 import { Line } from "react-chartjs-2";
 import {
@@ -46,6 +46,7 @@ ChartJS.register(
 
 export default function DashboardPage() {
   const { theme } = useTheme();
+  const { user } = useAuth();
   const [dateRange, setDateRange] = useState({
     start: new Date(new Date().setDate(new Date().getDate() - 30))
       .toLocaleDateString("en-GB")
@@ -64,9 +65,15 @@ export default function DashboardPage() {
     queryFn: () => api.getPlatformMetrics(dateRange.start, dateRange.end),
   });
 
-  const { data: recentActivity, isLoading: activityLoading } = useQuery({
-    queryKey: ["recentActivity"],
-    queryFn: () => api.getRecentActivity(),
+  const { data: overview, isLoading: overviewLoading } = useQuery({
+    queryKey: ["adminStatsOverview"],
+    queryFn: () => api.getStatsOverview(),
+  });
+
+  const { data: notifications, isLoading: notificationsLoading } = useQuery({
+    queryKey: ["notifications", user?.id],
+    queryFn: () => api.getNotifications(parseInt(user!.id, 10)),
+    enabled: !!user,
   });
 
   useEffect(() => {
@@ -198,18 +205,6 @@ export default function DashboardPage() {
     ],
   };
 
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case "user_registered":
-        return <UserPlus className="h-5 w-5 text-blue-500" />;
-      case "job_created":
-        return <BriefcaseIcon className="h-5 w-5 text-green-500" />;
-      case "job_completed":
-        return <CheckCircle className="h-5 w-5 text-purple-500" />;
-      default:
-        return <Activity className="h-5 w-5 text-gray-500" />;
-    }
-  };
 
   if (statsLoading) {
     return (
@@ -257,53 +252,43 @@ export default function DashboardPage() {
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card className="shadow-sm">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card className="shadow-sm lg:col-span-1">
           <CardContent className="p-4">
             <h3 className="text-base font-semibold text-foreground mb-2">
-              User Growth
+              Recent Activity
             </h3>
-            <div className="h-56">
-              {metricsLoading ? (
+            <div className="h-96 overflow-y-auto">
+              {notificationsLoading ? (
                 <Skeleton className="h-full w-full" />
               ) : (
-                <Line data={userGrowthData} options={chartOptions} />
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <h3 className="text-base font-semibold mb-2">Recent Activity</h3>
-            <div className="h-56 overflow-y-auto">
-              {activityLoading ? (
                 <div className="space-y-4">
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="flex items-center space-x-4">
-                      <Skeleton className="h-8 w-8 rounded-full" />
-                      <div className="space-y-2">
-                        <Skeleton className="h-4 w-48" />
-                        <Skeleton className="h-3 w-24" />
+                  {notifications?.slice(0, 10).map((notification) => (
+                    <div key={notification.id} className="flex items-start">
+                      <div className="w-1 h-1 bg-primary rounded-full mt-2 mr-2"></div>
+                      <div>
+                        <p className="text-sm">{notification.message}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(notification.created_at).toLocaleString()}
+                        </p>
                       </div>
                     </div>
                   ))}
                 </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm lg:col-span-2">
+          <CardContent className="p-4">
+            <h3 className="text-base font-semibold text-foreground mb-2">
+              User Growth
+            </h3>
+            <div className="h-96">
+              {metricsLoading ? (
+                <Skeleton className="h-full w-full" />
               ) : (
-                <ul className="space-y-4">
-                  {recentActivity?.map((activity) => (
-                    <li key={activity.id} className="flex items-start space-x-4">
-                      <div className="flex-shrink-0">
-                        {getActivityIcon(activity.type)}
-                      </div>
-                      <div>
-                        <p className="text-sm">{activity.message}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(activity.timestamp).toLocaleString()}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                <Line data={userGrowthData} options={chartOptions} />
               )}
             </div>
           </CardContent>

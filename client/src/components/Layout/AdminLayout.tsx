@@ -1,4 +1,4 @@
-import { useState, ReactNode } from "react";
+import { useState, ReactNode, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import {
   Bell,
@@ -26,6 +26,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { Notification } from "@/types";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -37,6 +40,21 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [currentDateTime] = useState(new Date().toLocaleDateString());
   const isMobile = useIsMobile();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const { data: notifications, refetch } = useQuery({
+    queryKey: ["notifications", user?.id],
+    queryFn: () => api.getNotifications(parseInt(user!.id, 10)),
+    enabled: !!user,
+  });
+
+  const unreadNotifications = notifications?.filter((n) => !n.read) || [];
+
+  const handleNotificationClick = async (notification: Notification) => {
+    if (!notification.read) {
+      await api.markNotificationAsRead(notification.id);
+      refetch();
+    }
+  };
 
   return (
     <div className="flex h-screen bg-background">
@@ -76,17 +94,50 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 className="pl-8 sm:w-[300px] md:w-[200px] lg:w-[300px]"
               />
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="p-2 text-muted-foreground hover:text-foreground relative rounded-full"
-              data-testid="button-notifications"
-            >
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center border-2 border-card">
-                3
-              </span>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="p-2 text-muted-foreground hover:text-foreground relative rounded-full"
+                  data-testid="button-notifications"
+                >
+                  <Bell className="h-5 w-5" />
+                  {unreadNotifications.length > 0 && (
+                    <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center border-2 border-card">
+                      {unreadNotifications.length}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-80" align="end">
+                <DropdownMenuLabel>Recent Notifications</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {notifications && notifications.length > 0 ? (
+                  notifications.slice(0, 5).map((notification) => (
+                    <DropdownMenuItem
+                      key={notification.id}
+                      onSelect={() => handleNotificationClick(notification)}
+                      className={cn(
+                        "cursor-pointer",
+                        !notification.read && "font-bold"
+                      )}
+                    >
+                      <div className="flex flex-col">
+                        <p className="text-sm">{notification.message}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(notification.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                    </DropdownMenuItem>
+                  ))
+                ) : (
+                  <DropdownMenuItem disabled>
+                    No new notifications
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <div className="text-right hidden sm:block">
               <p
                 className="text-sm font-medium text-foreground"
